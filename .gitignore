@@ -1,0 +1,11 @@
+# Node.js
+node_modules/
+
+# Visual Studio Code
+.vscode/
+
+# Arquivos de compilação TypeScript
+*.js
+*.map
+
+# Outros arquivos e pastas que você deseja excluir
