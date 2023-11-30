@@ -54,5 +54,5 @@ export {
   listProdutos,
   findProdutoById,
   updateProduto,
-  deleteProduto,
+  deleteProduto, produtos,
 };

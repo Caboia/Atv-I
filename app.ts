@@ -4,6 +4,13 @@ import {
   buscarClientePorId,
   atualizarCliente,
   excluirCliente,
+  consumirProduto,
+  listarTopClientes,
+  listarBottomClientes,
+  listarTopClientesGasto,
+  listarClientesGen,
+  listarProdutosMaisConsumidos,
+  listarProdutosMaisConsumidosPorGenero,
 } from "./src/controllers/clienteController";
 
 import * as readline from "readline";
@@ -15,6 +22,7 @@ import {
   listarProdutos,
 } from "./src/controllers/produtoController";
 import { parse } from "yargs";
+import { findProdutoById } from "./services/produtoService";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -57,6 +65,27 @@ async function main() {
         await deleteProd();
         break;
       case "11":
+        await consumirProd();
+        break;
+      case "12":
+        listarMaisClientes();
+        break;
+      case "13":
+        listarMenosClientes();
+        break;
+      case "14":
+        listarTopValor();
+        break;
+      case "15":
+        listarClientesPorGenero();
+        break;
+      case "16":
+        listarProdutosMaisConsumidos();
+        break;
+      case "17":
+        listarProdPorGenero();
+        break
+      case "18":
         console.log("Saindo do programa.");
         process.exit(0);
       default:
@@ -78,34 +107,53 @@ async function exibirMenu() {
         "\n8. Buscar produto por ID" +
         "\n9. Atualizar produto" +
         "\n10. Excluir produto" +
-        "\n11. Sair\nEscolha uma opção: ",
+        "\n11. Consumir produto" +
+        "\n12. Listar os clientes que mais consumiram" +
+        "\n13. Listar os clientes que menos consumiram" +
+        "\n14. Listar os clientes que mais consumiram em valor" +
+        "\n15. Listar os clientes por gênero" +
+        "\n16. Listar os produtos mais consumidos" +
+        "\n17. Listar os produtos mais consumidos por gênero" +
+        "\n18. Sair\nEscolha uma opção: ",
+        
+        
+        (opcao) => {
+          resolve(opcao);
+        }
+        );
+      });
+    }
+    
+    async function criarNovoCliente() {
+      const nome = await obterEntrada("Digite o nome do cliente: ");
+      const email = await obterEntrada("Digite o e-mail do cliente: ");
+      const genero = await obterEntrada("Digite o gênero do cliente: ");
+      
+      criarCliente({ nome, email, genero });
+    }
+    
+    async function buscarCliPorId() {
+      const id = await obterEntrada("Digite o ID do cliente a ser buscado: ");
+      buscarClientePorId({ id: parseInt(id) });
+    }
+    
+    async function listarClientesPorGenero() {
+      const genero = await obterEntrada(
+        "Digite o gênero dos clientes a serem listados: "
+      );
+      listarClientesGen({ genero });
+    
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    
+      main();
+    }
 
-      (opcao) => {
-        resolve(opcao);
-      }
-    );
-  });
-}
-
-async function criarNovoCliente() {
-  const nome = await obterEntrada("Digite o nome do cliente: ");
-  const email = await obterEntrada("Digite o e-mail do cliente: ");
-  const genero = await obterEntrada("Digite o gênero do cliente: ");
-
-  criarCliente({ nome, email, genero });
-}
-
-async function buscarCliPorId() {
-  const id = await obterEntrada("Digite o ID do cliente a ser buscado: ");
-  buscarClientePorId({ id: parseInt(id) });
-}
-
-async function updateCliente() {
-  const id = await obterEntrada("Digite o ID do cliente a ser atualizado: ");
-  const nome = await obterEntrada("Digite o novo nome: ");
-  const email = await obterEntrada("Digite o novo e-mail: ");
-  const genero = await obterEntrada("Digite o novo gênero: ");
-
+    async function updateCliente() {
+      const id = await obterEntrada("Digite o ID do cliente a ser atualizado: ");
+      const nome = await obterEntrada("Digite o novo nome: ");
+      const email = await obterEntrada("Digite o novo e-mail: ");
+      const genero = await obterEntrada("Digite o novo gênero: ");
+      
   atualizarCliente({
     id: parseInt(id),
     nome,
@@ -153,6 +201,63 @@ async function obterEntrada(pergunta: string): Promise<string> {
       resolve(resposta);
     });
   });
+}
+
+async function listarProdPorGenero() {
+  const genero = await obterEntrada(
+    "Digite o gênero para listar os produtos mais consumidos: "
+  );
+  listarProdutosMaisConsumidosPorGenero({ genero });
+
+  await new Promise(resolve => setTimeout(resolve, 1000));
+    
+      main();
+}
+
+async function consumirProd() {
+  const clienteId = parseInt(await obterEntrada("Digite o ID do cliente: "));
+  const produtoId = parseInt(await obterEntrada("Digite o ID do produto: "));
+  const quantidade = parseInt(await obterEntrada("Digite a quantidade: "));
+
+  const produto = findProdutoById(produtoId);
+
+  if (!produto) {
+    console.log("Erro: Produto não encontrado.");
+    return;
+  }
+
+
+  const sucessoConsumo = await consumirProduto(
+    clienteId,
+    produtoId,
+    quantidade,
+    produto.preco
+  );
+
+  if (sucessoConsumo) {
+    console.log(`Produto consumido com sucesso.`);
+  } else {
+    console.log("Erro ao consumir o produto.");
+  }
+}
+
+
+async function listarTopValor() {
+  const topClientesGasto = listarTopClientesGasto();
+  console.log("Top 10 clientes que mais consumiram em valor de reais:");
+  console.log(topClientesGasto.join("\n"));
+}
+
+async function listarMaisClientes() {
+  const topClientes = listarTopClientes();
+  console.log("Os 10 clientes que mais consumiram:");
+  console.log(topClientes.join(", "));
+}
+
+async function listarMenosClientes() {
+  const bottomClientes = listarBottomClientes();
+  console.log("Os 10 clientes que menos consumiram:");
+  console.log(bottomClientes.join(", "));
 }
 
 main();

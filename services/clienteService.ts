@@ -1,4 +1,5 @@
 import Cliente from "../models/cliente";
+import { findProdutoById, produtos } from "./produtoService"
 
 const clientes: Cliente[] = [];
 
@@ -9,6 +10,7 @@ function createCliente(cliente: Cliente): void {
   }
 
   cliente.id = clientes.length + 1;
+  cliente.historicoCompras = []
 
   clientes.push(cliente);
   console.log("Cliente criado com sucesso.");
@@ -50,10 +52,46 @@ function deleteCliente(clienteId: number): boolean {
   return true;
 }
 
+function getTotalConsumidoPorGenero(produtoId: number, genero: string): number {
+  const clientes = listClientes();
+  let totalConsumido = 0;
+
+  clientes.forEach((cliente) => {
+    cliente.historicoCompras.forEach((compra) => {
+      if (compra.produto.id === produtoId && cliente.genero === genero) {
+        totalConsumido += compra.totalGasto;
+      }
+    });
+  });
+
+  return totalConsumido;
+}
+
+
+function consumirProduto(clienteId: number, produtoId: number, quantidade: number, totalGasto: number): boolean {
+  const cliente = findClienteById(clienteId);
+  const produto = findProdutoById(produtoId);
+
+  if (!cliente || !produto) {
+    return false;
+  }
+
+  cliente.historicoCompras.push({
+    produto: produto,
+    quantidade: quantidade,
+    totalGasto: totalGasto,
+  });
+
+  return true;
+}
+
+
 export {
   createCliente,
   listClientes,
+  getTotalConsumidoPorGenero,
   findClienteById,
   updateCliente,
   deleteCliente,
+  consumirProduto
 };
